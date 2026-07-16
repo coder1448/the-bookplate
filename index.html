@@ -186,15 +186,24 @@
   .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
 
   .clear-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     font-family: 'Jost', sans-serif;
-    font-size: 11px;
-    color: var(--parchment-dim);
-    text-decoration: underline;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--brass-bright);
+    background: rgba(184,144,90,0.15);
+    border: 1px solid var(--brass);
+    border-radius: var(--radius);
     cursor: pointer;
     text-align: center;
-    display: block;
-    margin-top: 10px;
+    margin-top: 12px;
+    padding: 9px 14px;
+    transition: background 0.15s;
   }
+  .clear-link:hover { background: rgba(184,144,90,0.28); }
 
   .field-label {
     font-family: 'Jost', sans-serif;
@@ -621,24 +630,128 @@
     line-height: 1;
   }
 
-  .drawer-tabs {
+  .drawer-menu {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
     border-bottom: 1px solid rgba(184,144,90,0.3);
   }
-  .drawer-tab {
+  .drawer-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: rgba(184,144,90,0.06);
+    border: 1px solid rgba(184,144,90,0.35);
+    border-radius: var(--radius);
+    color: var(--parchment-dim);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .drawer-menu-item:hover {
+    background: rgba(184,144,90,0.14);
+    border-color: var(--brass);
+  }
+  .drawer-menu-item.active {
+    color: var(--oxblood-dark);
+    background: var(--brass);
+    border-color: var(--brass);
+    font-weight: 600;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: rgba(184,144,90,0.08);
+    border: 1px solid rgba(184,144,90,0.3);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-top: 10px;
+  }
+
+  .settings-row-title {
+    font-family: 'Libre Caslon Display', serif;
+    font-size: 15px;
+    color: var(--parchment);
+    margin-bottom: 6px;
+  }
+
+  .settings-row-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--parchment-dim);
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(184,144,90,0.5);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: var(--parchment);
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background: var(--brass);
+  }
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
+
+  .drawer-subtabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(184,144,90,0.2);
+  }
+  .drawer-subtab {
     flex: 1;
-    background: none;
-    border: none;
+    background: rgba(184,144,90,0.08);
+    border: 1px solid rgba(184,144,90,0.35);
+    border-radius: 14px;
     color: var(--parchment-dim);
     font-family: 'Jost', sans-serif;
     font-size: 10px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    padding: 12px 2px;
+    padding: 6px 4px;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
   }
-  .drawer-tab.active { color: var(--brass-bright); border-bottom-color: var(--brass); }
+  .drawer-subtab.active {
+    color: var(--oxblood-dark);
+    background: var(--brass);
+    border-color: var(--brass);
+    font-weight: 600;
+  }
 
   .drawer-body {
     flex: 1;
@@ -931,11 +1044,15 @@
     <span id="drawerRecsBtnLabel" class="drawer-recs-label"><svg viewBox="0 0 64 64" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-3px;margin-right:4px"><path d="M32 8C33 20 34 31 46 32C34 33 33 44 32 56C31 44 30 33 18 32C30 31 31 20 32 8Z" stroke="#d4ab73" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 14C50.5 18 51 20.5 56 21C51 21.5 50.5 24 50 28C49.5 24 49 21.5 44 21C49 20.5 49.5 18 50 14Z" stroke="#d4ab73" stroke-width="1.8" stroke-linejoin="round"/></svg>Recommended Books For You</span>
     <span class="drawer-recs-arrow">&rarr;</span>
   </div>
-  <div class="drawer-tabs">
-    <button class="drawer-tab active" data-tab="history" onclick="setDrawerTab('history')">History</button>
-    <button class="drawer-tab" data-tab="quotes" onclick="setDrawerTab('quotes')">&#9733; Quotes</button>
-    <button class="drawer-tab" data-tab="books" onclick="setDrawerTab('books')">&#9733; Books</button>
-    <button class="drawer-tab" data-tab="summaries" onclick="setDrawerTab('summaries')">&#9733; Summaries</button>
+  <div class="drawer-menu">
+    <button class="drawer-menu-item" data-tab="history" onclick="setDrawerTab('history')">History</button>
+    <button class="drawer-menu-item" data-tab="favourites" onclick="setDrawerTab('favourites')">&#9733; Favourites</button>
+    <button class="drawer-menu-item" onclick="goToSettings()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px;margin-right:5px"><path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.79399 16.0406C4.85279 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77279 8.36381 4.71399 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.79399C8.28381 4.85279 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77279 15.9606 4.71399C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Settings</button>
+  </div>
+  <div class="drawer-subtabs" id="drawerSubtabs" style="display:none">
+    <button class="drawer-subtab active" data-subtab="books" onclick="setDrawerSubtab('books')">Books</button>
+    <button class="drawer-subtab" data-subtab="quotes" onclick="setDrawerSubtab('quotes')">Quotes</button>
+    <button class="drawer-subtab" data-subtab="summaries" onclick="setDrawerSubtab('summaries')">Summaries</button>
   </div>
   <div class="drawer-body" id="drawerBody"></div>
 </div>
@@ -1035,18 +1152,19 @@
         <img id="previewImg" alt="Book cover preview">
       </div>
     </div>
-    <div class="clear-link" id="clearLink" style="display:none" onclick="clearImage()">choose a different photo</div>
+    <div class="clear-link" id="clearLink" style="display:none" onclick="clearImage()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7H7L8.5 4.5H15.5L17 7H20C20.5523 7 21 7.44772 21 8V18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18V8C3 7.44772 3.44772 7 4 7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.6"/></svg>Choose a different photo</div>
 
     <div id="quotesFields">
       <label class="field-label">What kind of quotes are you after?</label>
       <div class="chip-row" id="moodChips">
+        <button class="chip" data-mood="__custom__" id="customChip">Custom</button>
+        <button class="chip" data-mood="__surprise__" id="surpriseChip">Surprise me</button>
         <button class="chip active" data-mood="Motivational">Motivational</button>
         <button class="chip" data-mood="Funny">Funny</button>
         <button class="chip" data-mood="Love">Love</button>
         <button class="chip" data-mood="Inspiring">Inspiring</button>
         <button class="chip" data-mood="Philosophical">Philosophical</button>
         <button class="chip" data-mood="Melancholic">Melancholic</button>
-        <button class="chip" data-mood="__custom__" id="customChip">Custom</button>
       </div>
       <input type="text" id="customMoodInput" placeholder="Describe the kind of quotes you want..." style="display:none; margin-top:10px; width:100%; background:rgba(0,0,0,0.25); border:1px solid rgba(184,144,90,0.4); color:var(--parchment); font-family:'Crimson Text', serif; font-size:14px; padding:9px 10px; border-radius:var(--radius);">
     </div>
@@ -1107,9 +1225,84 @@
   <div id="historyDetailBody"></div>
 </div>
 
+<div class="wrap" id="settingsPage" style="display:none">
+  <header>
+    <span class="back-link" onclick="backFromSettings()">&larr; Back</span>
+    <h1 style="margin-top:18px"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-4px;margin-right:8px"><path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="#f2ece0" stroke-width="1.6"/><path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.79399 16.0406C4.85279 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77279 8.36381 4.71399 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.79399C8.28381 4.85279 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77279 15.9606 4.71399C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="#f2ece0" stroke-width="1.4" stroke-linejoin="round"/></svg>Settings</h1>
+  </header>
+  <div class="settings-row">
+    <div class="settings-row-text">
+      <div class="settings-row-title">Daily quote on your shelf</div>
+      <div class="settings-row-desc">Shows a random favorited quote each time you open the app, once you've favorited at least 5.</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" id="onThisDayToggle" onchange="toggleOnThisDaySetting(this.checked)">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+</div>
+
 <footer class="page-footer" id="pageFooter" style="display:none">THE BOOKPLATE · PUBLIC DOMAIN CATALOGUE</footer>
 
 <script>
+let previousPageBeforeSettings = 'main';
+
+function goToSettings() {
+  previousPageBeforeSettings = currentPage;
+  closeDrawer();
+
+  const sourceId = currentPage === 'recs' ? 'recsPage' : 'mainApp';
+  const sourceEl = document.getElementById(sourceId);
+  const menuBtn = document.getElementById('menuBtn');
+  const settingsPage = document.getElementById('settingsPage');
+
+  sourceEl.classList.add('page-exit');
+  menuBtn.style.display = 'none';
+
+  setTimeout(() => {
+    sourceEl.style.display = 'none';
+    sourceEl.classList.remove('page-exit');
+
+    document.getElementById('onThisDayToggle').checked = !!(shelfData.onThisDay && shelfData.onThisDay.enabled);
+
+    settingsPage.style.display = 'block';
+    settingsPage.classList.remove('main-enter');
+    void settingsPage.offsetWidth;
+    settingsPage.classList.add('main-enter');
+    currentPage = 'settings';
+  }, 400);
+}
+
+function backFromSettings() {
+  const settingsPage = document.getElementById('settingsPage');
+  const menuBtn = document.getElementById('menuBtn');
+
+  settingsPage.classList.add('page-exit');
+
+  setTimeout(() => {
+    settingsPage.style.display = 'none';
+    settingsPage.classList.remove('page-exit');
+
+    const targetId = previousPageBeforeSettings === 'recs' ? 'recsPage' : 'mainApp';
+    const targetEl = document.getElementById(targetId);
+    targetEl.style.display = 'block';
+    targetEl.classList.remove('main-enter');
+    void targetEl.offsetWidth;
+    targetEl.classList.add('main-enter');
+
+    menuBtn.style.display = 'flex';
+    currentPage = previousPageBeforeSettings;
+  }, 400);
+}
+
+function toggleOnThisDaySetting(checked) {
+  if (!shelfData.onThisDay) shelfData.onThisDay = { asked: false, enabled: false };
+  shelfData.onThisDay.enabled = checked;
+  shelfData.onThisDay.asked = true;
+  saveShelf();
+  renderOnThisDayBanner();
+}
+
 function backToMain() {
   currentPage = 'main';
   const recsPage = document.getElementById('recsPage');
@@ -1375,7 +1568,9 @@ async function regenerateQuotes(buttonEl, title, author, mood) {
 
   bodyContainer.innerHTML = `<div class="loading-box">Finding a different set of quotes...</div>`;
 
-  const userText = `The book "${title}" by ${author} has already been identified as public domain — no need to re-check that. Give me content_type "quotes" with 5-8 real quotes from the book matching the mood: ${mood}. Please choose a genuinely different set of quotes than the most commonly cited ones, for variety.`;
+  const userText = mood === 'Surprise me'
+    ? `The book "${title}" by ${author} has already been identified as public domain — no need to re-check that. Give me content_type "quotes" with 5-8 real quotes from the book — a genuinely surprising, varied, delightful mix, different from the previous selection.`
+    : `The book "${title}" by ${author} has already been identified as public domain — no need to re-check that. Give me content_type "quotes" with 5-8 real quotes from the book matching the mood: ${mood}. Please choose a genuinely different set of quotes than the most commonly cited ones, for variety.`;
 
   try {
     const result = await callClaudeWithRetries(userText, null, false);
@@ -1583,16 +1778,24 @@ function backFromHistoryDetail() {
 
     menuBtn.style.display = 'flex';
     currentPage = previousPageBeforeHistory;
-    openDrawer();
+    openDrawer(false);
   }, 400);
 }
 
 let currentPage = 'main';
 
-function openDrawer() {
+function openDrawer(reset = true) {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawerBackdrop').classList.add('open');
-  renderDrawer();
+
+  if (reset) {
+    document.querySelectorAll('.drawer-menu-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('drawerSubtabs').style.display = 'none';
+    document.getElementById('drawerBody').innerHTML = '';
+  } else {
+    renderDrawer();
+  }
+
   updateDrawerRecsButton();
 }
 
@@ -1615,13 +1818,32 @@ function closeDrawer() {
 }
 
 function setDrawerTab(tab) {
-  document.querySelectorAll('.drawer-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  renderDrawer(tab);
+  document.querySelectorAll('.drawer-menu-item').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  const subtabsRow = document.getElementById('drawerSubtabs');
+
+  if (tab === 'favourites') {
+    subtabsRow.style.display = 'flex';
+    renderDrawer(currentDrawerSubtab());
+  } else {
+    subtabsRow.style.display = 'none';
+    renderDrawer('history');
+  }
+}
+
+function setDrawerSubtab(subtab) {
+  document.querySelectorAll('.drawer-subtab').forEach(t => t.classList.toggle('active', t.dataset.subtab === subtab));
+  renderDrawer(subtab);
+}
+
+function currentDrawerSubtab() {
+  const active = document.querySelector('.drawer-subtab.active');
+  return active ? active.dataset.subtab : 'books';
 }
 
 function currentDrawerTab() {
-  const active = document.querySelector('.drawer-tab.active');
-  return active ? active.dataset.tab : 'history';
+  const mainActive = document.querySelector('.drawer-menu-item.active');
+  const mainTab = mainActive ? mainActive.dataset.tab : 'history';
+  return mainTab === 'favourites' ? currentDrawerSubtab() : 'history';
 }
 
 function renderDrawer(tab) {
@@ -1828,6 +2050,9 @@ document.querySelectorAll('.chip').forEach(chip => {
       customInput.style.display = 'block';
       customInput.focus();
       currentMood = customInput.value.trim() || 'Custom';
+    } else if (chip.dataset.mood === '__surprise__') {
+      customInput.style.display = 'none';
+      currentMood = 'Surprise me';
     } else {
       customInput.style.display = 'none';
       currentMood = chip.dataset.mood;
@@ -1874,7 +2099,7 @@ function handleFile(file) {
       document.getElementById('scanEmpty').style.display = 'none';
       document.getElementById('scanPreview').style.display = 'block';
       document.getElementById('scanZone').classList.add('has-image');
-      document.getElementById('clearLink').style.display = 'block';
+      document.getElementById('clearLink').style.display = 'flex';
       document.getElementById('submitBtn').disabled = false;
     };
     img.onerror = () => {
@@ -2131,7 +2356,9 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     let summaryLengthUsed = null;
     let summaryStyleUsed = null;
     if (currentMode === 'quotes') {
-      userText = `Identify this book. If public domain, give me content_type "quotes" with 5-8 real quotes from the book matching the mood: ${currentMood}.`;
+      userText = currentMood === 'Surprise me'
+        ? `Identify this book. If public domain, give me content_type "quotes" with 5-8 real quotes from the book — pick a genuinely surprising, varied, and delightful mix rather than sticking to one mood. Choose whatever quotes you find most compelling or unexpected from the book.`
+        : `Identify this book. If public domain, give me content_type "quotes" with 5-8 real quotes from the book matching the mood: ${currentMood}.`;
     } else {
       const lengthSelect = document.getElementById('summaryLength').value;
       const length = lengthSelect === '__custom__'
