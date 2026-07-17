@@ -183,6 +183,35 @@
   .btn-primary:hover { background: var(--brass-bright); }
   .btn-primary:disabled { background: rgba(184,144,90,0.25); color: rgba(236,226,198,0.4); cursor: not-allowed; }
 
+  .btn-danger {
+    background: #a85a4a;
+    border: none;
+    color: #f2ece0;
+    font-family: 'Jost', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .btn-danger:hover { background: #c06c5a; }
+
+  .settings-clear-btn {
+    background: none;
+    border: 1px solid #a85a4a;
+    color: #d99688;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 8px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .settings-clear-btn:hover { background: rgba(168,90,74,0.15); }
+
   .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
 
   .clear-link {
@@ -242,6 +271,54 @@
   }
 
   .mode-toggle { display: flex; gap: 8px; margin-bottom: 18px; }
+
+  .input-method-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .input-method-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(184,144,90,0.06);
+    border: 1px solid rgba(184,144,90,0.35);
+    border-radius: 20px;
+    color: var(--parchment-dim);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .input-method-btn:hover { background: rgba(184,144,90,0.14); }
+  .input-method-btn.active {
+    background: var(--brass);
+    border-color: var(--brass);
+    color: var(--oxblood-dark);
+    font-weight: 600;
+  }
+
+  .search-zone {
+    border: 1px solid rgba(184,144,90,0.35);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 4px;
+  }
+
+  .search-text-input {
+    width: 100%;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(184,144,90,0.4);
+    color: var(--parchment);
+    font-family: 'Crimson Text', serif;
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+  }
+  .search-text-input:last-child { margin-bottom: 0; }
   .mode-btn {
     flex: 1;
     font-family: 'Jost', sans-serif;
@@ -342,6 +419,14 @@
     letter-spacing: 0.05em;
     color: var(--ink-soft);
     margin-top: 4px;
+  }
+
+  .matched-note {
+    font-family: 'Jost', sans-serif;
+    font-style: italic;
+    font-size: 11px;
+    color: #8a7f72;
+    margin-top: 6px;
   }
 
   .card-stamp {
@@ -635,7 +720,8 @@
     flex-direction: column;
     gap: 8px;
     padding: 14px;
-    border-bottom: 1px solid rgba(184,144,90,0.3);
+    flex: 1;
+    overflow-y: auto;
   }
   .drawer-menu-item {
     display: block;
@@ -753,10 +839,8 @@
     font-weight: 600;
   }
 
-  .drawer-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
+  .drawer-section-content {
+    padding: 4px 2px 10px;
   }
 
   .drawer-empty {
@@ -821,6 +905,23 @@
   }
   .remove-x:hover { color: #e8b8ab; }
 
+  .drawer-item-hover-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .drawer-hover-save {
+    color: var(--parchment-dim);
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .drawer-item-hoverable:hover .drawer-hover-save {
+    opacity: 1;
+  }
+  .drawer-hover-save:hover { color: var(--brass-bright); }
+
   /* Favorite star buttons */
   .fav-star {
     background: none;
@@ -875,6 +976,9 @@
     transition: color 0.15s;
   }
   .save-img-btn:hover { color: var(--oxblood); }
+
+  .save-img-btn-lg svg { width: 22px; height: 22px; }
+  .save-img-btn-lg { padding: 6px 8px; }
 
   .regen-row {
     margin-top: 12px;
@@ -1035,6 +1139,16 @@
     <button class="btn btn-primary" onclick="answerOnThisDayPrompt(true)">Yes, I'd like that</button>
   </div>
 </div>
+
+<div class="modal-backdrop" id="confirmModalBackdrop"></div>
+<div class="modal-card" id="confirmModal">
+  <div class="modal-title" id="confirmModalTitle">Are you sure?</div>
+  <p class="modal-text" id="confirmModalText"></p>
+  <div class="modal-actions">
+    <button class="btn" onclick="closeConfirmModal()">Cancel</button>
+    <button class="btn btn-danger" id="confirmModalActionBtn">Yes, clear it</button>
+  </div>
+</div>
 <div class="drawer" id="drawer">
   <div class="drawer-header">
     <div class="drawer-title">Your Shelf</div>
@@ -1044,17 +1158,28 @@
     <span id="drawerRecsBtnLabel" class="drawer-recs-label"><svg viewBox="0 0 64 64" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-3px;margin-right:4px"><path d="M32 8C33 20 34 31 46 32C34 33 33 44 32 56C31 44 30 33 18 32C30 31 31 20 32 8Z" stroke="#d4ab73" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 14C50.5 18 51 20.5 56 21C51 21.5 50.5 24 50 28C49.5 24 49 21.5 44 21C49 20.5 49.5 18 50 14Z" stroke="#d4ab73" stroke-width="1.8" stroke-linejoin="round"/></svg>Recommended Books For You</span>
     <span class="drawer-recs-arrow">&rarr;</span>
   </div>
+  <div class="drawer-recs-btn" id="drawerFindQuoteBtn" onclick="goToFindQuote()">
+    <span class="drawer-recs-label"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-3px;margin-right:4px"><circle cx="11" cy="11" r="6.5" stroke="#d4ab73" stroke-width="1.8"/><path d="M20 20L15.8 15.8" stroke="#d4ab73" stroke-width="1.8" stroke-linecap="round"/></svg>Find a Quote</span>
+    <span class="drawer-recs-arrow">&rarr;</span>
+  </div>
   <div class="drawer-menu">
-    <button class="drawer-menu-item" data-tab="history" onclick="setDrawerTab('history')">History</button>
-    <button class="drawer-menu-item" data-tab="favourites" onclick="setDrawerTab('favourites')">&#9733; Favourites</button>
+    <button class="drawer-menu-item" data-tab="history" onclick="toggleDrawerSection('history')">History</button>
+    <div class="drawer-section-content" id="historySectionContent" style="display:none">
+      <div id="historyListBody"></div>
+    </div>
+
+    <button class="drawer-menu-item" data-tab="favourites" onclick="toggleDrawerSection('favourites')">&#9733; Favourites</button>
+    <div class="drawer-section-content" id="favouritesSectionContent" style="display:none">
+      <div class="drawer-subtabs" id="drawerSubtabs">
+        <button class="drawer-subtab active" data-subtab="books" onclick="setDrawerSubtab('books')">Books</button>
+        <button class="drawer-subtab" data-subtab="quotes" onclick="setDrawerSubtab('quotes')">Quotes</button>
+        <button class="drawer-subtab" data-subtab="summaries" onclick="setDrawerSubtab('summaries')">Summaries</button>
+      </div>
+      <div id="favouritesListBody"></div>
+    </div>
+
     <button class="drawer-menu-item" onclick="goToSettings()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px;margin-right:5px"><path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.79399 16.0406C4.85279 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77279 8.36381 4.71399 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.79399C8.28381 4.85279 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77279 15.9606 4.71399C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Settings</button>
   </div>
-  <div class="drawer-subtabs" id="drawerSubtabs" style="display:none">
-    <button class="drawer-subtab active" data-subtab="books" onclick="setDrawerSubtab('books')">Books</button>
-    <button class="drawer-subtab" data-subtab="quotes" onclick="setDrawerSubtab('quotes')">Quotes</button>
-    <button class="drawer-subtab" data-subtab="summaries" onclick="setDrawerSubtab('summaries')">Summaries</button>
-  </div>
-  <div class="drawer-body" id="drawerBody"></div>
 </div>
 
 <div class="onboarding" id="onboarding">
@@ -1137,6 +1262,11 @@
       <button class="mode-btn" id="modeSummary" onclick="setMode('summary')">Summary</button>
     </div>
 
+    <div class="input-method-toggle">
+      <button class="input-method-btn active" id="methodPhoto" onclick="setInputMethod('photo')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px;margin-right:5px"><path d="M4 7H7L8.5 4.5H15.5L17 7H20C20.5523 7 21 7.44772 21 8V18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18V8C3 7.44772 3.44772 7 4 7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.6"/></svg>Photo</button>
+      <button class="input-method-btn" id="methodSearch" onclick="setInputMethod('search')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px;margin-right:5px"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M20 20L15.8 15.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Search</button>
+    </div>
+
     <div class="scan-zone" id="scanZone">
       <div id="scanEmpty">
         <div class="scan-label">Step one</div>
@@ -1153,6 +1283,15 @@
       </div>
     </div>
     <div class="clear-link" id="clearLink" style="display:none" onclick="clearImage()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7H7L8.5 4.5H15.5L17 7H20C20.5523 7 21 7.44772 21 8V18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18V8C3 7.44772 3.44772 7 4 7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.6"/></svg>Choose a different photo</div>
+
+    <div class="search-zone" id="searchZone" style="display:none">
+      <div class="scan-label">Step one</div>
+      <div class="scan-hint">Type a book title, an author, or both — no need for a photo.</div>
+      <label class="field-label">Book title</label>
+      <input type="text" id="searchTitleInput" placeholder="e.g. Pride and Prejudice" class="search-text-input">
+      <label class="field-label">Author (optional)</label>
+      <input type="text" id="searchAuthorInput" placeholder="e.g. Jane Austen" class="search-text-input">
+    </div>
 
     <div id="quotesFields">
       <label class="field-label">What kind of quotes are you after?</label>
@@ -1217,12 +1356,38 @@
   <div id="recsBody"></div>
 </div>
 
+<div class="wrap" id="findQuotePage" style="display:none">
+  <header>
+    <span class="back-link" onclick="backFromFindQuote()">&larr; Back</span>
+    <div class="eyebrow" style="margin-top:14px">By theme</div>
+    <h1>Find a Quote</h1>
+    <div class="tagline">Describe what you're after — a feeling, a topic, anything.</div>
+  </header>
+  <div class="panel">
+    <label class="field-label">What kind of quote are you looking for?</label>
+    <input type="text" id="findQuoteInput" class="search-text-input" placeholder="e.g. quotes about courage, funny quotes about marriage, loss and grief...">
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-primary" id="findQuoteSubmitBtn" onclick="submitFindQuote()">Find Quotes</button>
+    </div>
+    <div id="findQuoteError"></div>
+  </div>
+  <div id="findQuoteResults"></div>
+</div>
+
 <div class="wrap" id="historyDetailPage" style="display:none">
   <header>
     <span class="back-link" onclick="backFromHistoryDetail()">&larr; Back</span>
     <div class="eyebrow" style="margin-top:14px">From your history</div>
   </header>
   <div id="historyDetailBody"></div>
+</div>
+
+<div class="wrap" id="favDetailPage" style="display:none">
+  <header>
+    <span class="back-link" onclick="backFromFavDetail()">&larr; Back</span>
+    <div class="eyebrow" style="margin-top:14px">From your favourites</div>
+  </header>
+  <div id="favDetailBody"></div>
 </div>
 
 <div class="wrap" id="settingsPage" style="display:none">
@@ -1239,6 +1404,22 @@
       <input type="checkbox" id="onThisDayToggle" onchange="toggleOnThisDaySetting(this.checked)">
       <span class="toggle-slider"></span>
     </label>
+  </div>
+
+  <div class="settings-row">
+    <div class="settings-row-text">
+      <div class="settings-row-title">Clear all history</div>
+      <div class="settings-row-desc">Deletes every past scan from your history. Your favorites won't be affected.</div>
+    </div>
+    <button class="settings-clear-btn" onclick="clearAllHistory()">Clear</button>
+  </div>
+
+  <div class="settings-row">
+    <div class="settings-row-text">
+      <div class="settings-row-title">Clear all data</div>
+      <div class="settings-row-desc">Deletes your entire history and all favorited books, quotes, and summaries.</div>
+    </div>
+    <button class="settings-clear-btn" onclick="clearAllData()">Clear</button>
   </div>
 </div>
 
@@ -1303,6 +1484,54 @@ function toggleOnThisDaySetting(checked) {
   renderOnThisDayBanner();
 }
 
+let confirmModalCallback = null;
+
+function showConfirmModal(title, text, onConfirm) {
+  document.getElementById('confirmModalTitle').textContent = title;
+  document.getElementById('confirmModalText').textContent = text;
+  confirmModalCallback = onConfirm;
+  document.getElementById('confirmModalBackdrop').classList.add('open');
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmModalBackdrop').classList.remove('open');
+  document.getElementById('confirmModal').classList.remove('open');
+  confirmModalCallback = null;
+}
+
+document.getElementById('confirmModalActionBtn').addEventListener('click', () => {
+  if (confirmModalCallback) confirmModalCallback();
+  closeConfirmModal();
+});
+
+function clearAllHistory() {
+  showConfirmModal(
+    'Clear all history?',
+    "This will permanently delete every past scan from your history. Your favorites won't be affected. This can't be undone.",
+    () => {
+      shelfData.history = [];
+      saveShelf();
+      renderOnThisDayBanner();
+    }
+  );
+}
+
+function clearAllData() {
+  showConfirmModal(
+    'Clear all data?',
+    "This will permanently delete your entire history and all favorited books, quotes, and summaries. This can't be undone.",
+    () => {
+      shelfData.history = [];
+      shelfData.favQuotes = [];
+      shelfData.favBooks = [];
+      shelfData.favSummaries = [];
+      saveShelf();
+      renderOnThisDayBanner();
+    }
+  );
+}
+
 function backToMain() {
   currentPage = 'main';
   const recsPage = document.getElementById('recsPage');
@@ -1336,6 +1565,101 @@ async function goToRecommendations() {
     recsPage.classList.add('main-enter');
     loadRecommendations();
   }, 400);
+}
+
+function backFromFindQuote() {
+  currentPage = 'main';
+  const findQuotePage = document.getElementById('findQuotePage');
+  const mainApp = document.getElementById('mainApp');
+
+  findQuotePage.classList.remove('main-enter');
+  findQuotePage.classList.add('page-exit');
+
+  setTimeout(() => {
+    findQuotePage.style.display = 'none';
+    findQuotePage.classList.remove('page-exit');
+    mainApp.style.display = 'block';
+    mainApp.classList.remove('main-enter');
+    void mainApp.offsetWidth;
+    mainApp.classList.add('main-enter');
+  }, 400);
+}
+
+function goToFindQuote() {
+  currentPage = 'findQuote';
+  closeDrawer();
+  const mainApp = document.getElementById('mainApp');
+  const findQuotePage = document.getElementById('findQuotePage');
+
+  mainApp.classList.add('page-exit');
+
+  setTimeout(() => {
+    mainApp.style.display = 'none';
+    mainApp.classList.remove('page-exit');
+    findQuotePage.style.display = 'block';
+    findQuotePage.classList.add('main-enter');
+  }, 400);
+}
+
+async function submitFindQuote() {
+  const input = document.getElementById('findQuoteInput');
+  const theme = input.value.trim();
+  const errorBox = document.getElementById('findQuoteError');
+  const resultsBox = document.getElementById('findQuoteResults');
+  const submitBtn = document.getElementById('findQuoteSubmitBtn');
+  errorBox.innerHTML = '';
+
+  if (!theme) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Searching...';
+  resultsBox.innerHTML = `<div class="loading-box">Looking through the classics for you...</div>`;
+
+  const systemPrompt = `You find real quotes from well-known, commonly anthologized public domain books (published before 1929, or classical/ancient works) that match a theme the person describes. Stick to famous, frequently-quoted classics where you are confident of both the exact wording and the correct book/author — accuracy matters more than variety. Never invent a quote or guess at an attribution you're not confident about.
+
+Respond with ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
+{
+  "quotes": [
+    { "quote": "the exact real quote", "title": "book title", "author": "author name" }
+  ]
+}
+Give 5-8 quotes if you can confidently find that many; fewer is fine if you can't. If you cannot confidently find any matching quotes, return {"quotes": []}.`;
+
+  const userText = `Find quotes matching this theme: ${theme}`;
+
+  try {
+    const data = await callClaudeWithRetries(userText, null, false, systemPrompt);
+    const quotes = (data && data.quotes) || [];
+
+    if (quotes.length === 0) {
+      resultsBox.innerHTML = `<div class="drawer-empty">Couldn't confidently find quotes for that one — try a different theme or phrase it differently.</div>`;
+    } else {
+      resultsBox.innerHTML = quotes.map(q => {
+        const qAttr = q.quote.replace(/'/g, "\\'");
+        const titleAttr = q.title.replace(/'/g, "\\'");
+        const authorAttr = q.author.replace(/'/g, "\\'");
+        const isFav = shelfData.favQuotes.some(fq => fq.quote === q.quote && fq.title === q.title);
+        return `
+          <div class="card">
+            <div class="quote-item-row">
+              <div class="quote-item">"${escapeHtml(q.quote)}"</div>
+              <div class="quote-actions">
+                <button class="fav-star${isFav ? ' active' : ''}" onclick="toggleQuoteFavorite(this,'${qAttr}','${titleAttr}','${authorAttr}')">&#9733;</button>
+                <button class="save-img-btn" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Found for you')">${saveIconSvg}</button>
+              </div>
+            </div>
+            <div class="card-footer">${escapeHtml(q.title)} — ${escapeHtml(q.author)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  } catch (e) {
+    resultsBox.innerHTML = '';
+    errorBox.innerHTML = `<div class="error-box">Couldn't search for quotes just then — please try again in a moment. ${escapeHtml(e.message || String(e))}</div>`;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Find Quotes';
+  }
 }
 
 async function loadRecommendations() {
@@ -1782,18 +2106,173 @@ function backFromHistoryDetail() {
   }, 400);
 }
 
+let previousPageBeforeFavDetail = 'main';
+
+function viewFavoriteItem(type, id) {
+  let item;
+  if (type === 'quotes') item = shelfData.favQuotes.find(q => q.id === id);
+  if (type === 'books') item = shelfData.favBooks.find(b => b.id === id);
+  if (type === 'summaries') item = shelfData.favSummaries.find(s => s.id === id);
+  if (!item) return;
+
+  closeDrawer();
+  previousPageBeforeFavDetail = currentPage;
+
+  const sourceId = currentPage === 'recs' ? 'recsPage' : 'mainApp';
+  const sourceEl = document.getElementById(sourceId);
+  const menuBtn = document.getElementById('menuBtn');
+
+  sourceEl.classList.add('page-exit');
+  menuBtn.style.display = 'none';
+
+  setTimeout(() => {
+    sourceEl.style.display = 'none';
+    sourceEl.classList.remove('page-exit');
+
+    renderFavDetail(type, item);
+
+    const detailPage = document.getElementById('favDetailPage');
+    detailPage.style.display = 'block';
+    detailPage.classList.remove('main-enter');
+    void detailPage.offsetWidth;
+    detailPage.classList.add('main-enter');
+    currentPage = 'favDetail';
+  }, 400);
+}
+
+function renderFavDetail(type, item) {
+  const body = document.getElementById('favDetailBody');
+  const titleAttr = item.title.replace(/'/g, "\\'");
+  const authorAttr = item.author.replace(/'/g, "\\'");
+
+  if (type === 'quotes') {
+    const qAttr = item.quote.replace(/'/g, "\\'");
+    body.innerHTML = `
+      <div class="card">
+        <div class="card-header" style="border-bottom:none;background-image:none;padding-bottom:6px;">
+          <div class="card-title">${escapeHtml(item.title)}</div>
+          <div class="card-author">${escapeHtml(item.author)}</div>
+        </div>
+        <div class="quote-item" style="font-size:19px">"${escapeHtml(item.quote)}"</div>
+        <div class="summary-actions" style="margin-top:16px">
+          <button class="fav-star active" onclick="unfavoriteAndBack('favQuotes','${item.id}')">&#9733; Remove favorite</button>
+          <button class="save-img-btn save-img-btn-lg" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Favorite')">${saveIconSvg}</button>
+        </div>
+      </div>
+    `;
+  } else if (type === 'books') {
+    body.innerHTML = `
+      <div class="card">
+        <div class="card-header" style="border-bottom:none;background-image:none;padding-bottom:6px;">
+          <div class="card-title">${escapeHtml(item.title)}</div>
+          <div class="card-author">${escapeHtml(item.author)}</div>
+        </div>
+        <div class="summary-text">This book is on your favourites shelf. Get fresh quotes or a summary from it any time — no need to find the physical copy.</div>
+        <div class="summary-actions" style="margin-top:16px; flex-direction:column; gap:10px; align-items:stretch;">
+          <button class="btn btn-primary" onclick="rescanFavoriteBook('${titleAttr}','${authorAttr}')">Get quotes or summary from this book</button>
+          <button class="fav-star active" style="align-self:center" onclick="unfavoriteAndBack('favBooks','${item.id}')">&#9733; Remove favorite</button>
+        </div>
+      </div>
+    `;
+  } else if (type === 'summaries') {
+    const sAttr = item.summary.replace(/'/g, "\\'").replace(/\n/g, ' ');
+    body.innerHTML = `
+      <div class="card">
+        <div class="card-header" style="border-bottom:none;background-image:none;padding-bottom:6px;">
+          <div class="card-title">${escapeHtml(item.title)}</div>
+          <div class="card-author">${escapeHtml(item.author)}</div>
+        </div>
+        <div class="summary-text">${escapeHtml(item.summary)}</div>
+        <div class="summary-actions" style="margin-top:16px">
+          <button class="fav-star active" onclick="unfavoriteAndBack('favSummaries','${item.id}')">&#9733; Remove favorite</button>
+          <button class="save-img-btn" title="Save as image" onclick="saveSummaryAsImage('${sAttr}','${titleAttr}','${authorAttr}')">${saveIconSvg}</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function rescanFavoriteBook(title, author) {
+  const detailPage = document.getElementById('favDetailPage');
+  const mainApp = document.getElementById('mainApp');
+  const recsPage = document.getElementById('recsPage');
+  const menuBtn = document.getElementById('menuBtn');
+
+  detailPage.classList.add('page-exit');
+
+  setTimeout(() => {
+    detailPage.style.display = 'none';
+    detailPage.classList.remove('page-exit');
+    recsPage.style.display = 'none';
+
+    mainApp.style.display = 'block';
+    mainApp.classList.remove('main-enter');
+    void mainApp.offsetWidth;
+    mainApp.classList.add('main-enter');
+
+    menuBtn.style.display = 'flex';
+    currentPage = 'main';
+
+    setInputMethod('search');
+    document.getElementById('searchTitleInput').value = title;
+    document.getElementById('searchAuthorInput').value = author;
+    updateSubmitButtonState();
+    document.getElementById('searchZone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 400);
+}
+
+function unfavoriteAndBack(listName, id) {
+  shelfData[listName] = shelfData[listName].filter(i => i.id !== id);
+  saveShelf();
+  backFromFavDetail();
+}
+
+function backFromFavDetail() {
+  const detailPage = document.getElementById('favDetailPage');
+  const menuBtn = document.getElementById('menuBtn');
+
+  detailPage.classList.add('page-exit');
+
+  setTimeout(() => {
+    detailPage.style.display = 'none';
+    detailPage.classList.remove('page-exit');
+
+    const targetId = previousPageBeforeFavDetail === 'recs' ? 'recsPage' : 'mainApp';
+    const targetEl = document.getElementById(targetId);
+    targetEl.style.display = 'block';
+    targetEl.classList.remove('main-enter');
+    void targetEl.offsetWidth;
+    targetEl.classList.add('main-enter');
+
+    menuBtn.style.display = 'flex';
+    currentPage = previousPageBeforeFavDetail;
+    openDrawer(false, 'favourites');
+  }, 400);
+}
+
 let currentPage = 'main';
 
-function openDrawer(reset = true) {
+function openDrawer(reset = true, sectionToReopen = 'history') {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawerBackdrop').classList.add('open');
 
   if (reset) {
     document.querySelectorAll('.drawer-menu-item').forEach(t => t.classList.remove('active'));
-    document.getElementById('drawerSubtabs').style.display = 'none';
-    document.getElementById('drawerBody').innerHTML = '';
+    document.getElementById('historySectionContent').style.display = 'none';
+    document.getElementById('favouritesSectionContent').style.display = 'none';
+    document.getElementById('historyListBody').innerHTML = '';
+    document.getElementById('favouritesListBody').innerHTML = '';
+  } else if (sectionToReopen === 'favourites') {
+    document.querySelectorAll('.drawer-menu-item').forEach(t => t.classList.toggle('active', t.dataset.tab === 'favourites'));
+    document.getElementById('favouritesSectionContent').style.display = 'block';
+    document.getElementById('historySectionContent').style.display = 'none';
+    renderDrawer(currentDrawerSubtab());
   } else {
-    renderDrawer();
+    // Returning from a history item — reopen the history section specifically
+    document.querySelectorAll('.drawer-menu-item').forEach(t => t.classList.toggle('active', t.dataset.tab === 'history'));
+    document.getElementById('historySectionContent').style.display = 'block';
+    document.getElementById('favouritesSectionContent').style.display = 'none';
+    renderDrawer('history');
   }
 
   updateDrawerRecsButton();
@@ -1817,16 +2296,32 @@ function closeDrawer() {
   document.getElementById('drawerBackdrop').classList.remove('open');
 }
 
-function setDrawerTab(tab) {
-  document.querySelectorAll('.drawer-menu-item').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  const subtabsRow = document.getElementById('drawerSubtabs');
+function toggleDrawerSection(section) {
+  const historyContent = document.getElementById('historySectionContent');
+  const favContent = document.getElementById('favouritesSectionContent');
+  const historyBtn = document.querySelector('.drawer-menu-item[data-tab="history"]');
+  const favBtn = document.querySelector('.drawer-menu-item[data-tab="favourites"]');
 
-  if (tab === 'favourites') {
-    subtabsRow.style.display = 'flex';
-    renderDrawer(currentDrawerSubtab());
-  } else {
-    subtabsRow.style.display = 'none';
+  const isOpen = section === 'history'
+    ? historyContent.style.display === 'block'
+    : favContent.style.display === 'block';
+
+  // Collapse both first — only one section open at a time
+  historyContent.style.display = 'none';
+  favContent.style.display = 'none';
+  historyBtn.classList.remove('active');
+  favBtn.classList.remove('active');
+
+  if (isOpen) return; // was already open — just collapse it, don't reopen
+
+  if (section === 'history') {
+    historyContent.style.display = 'block';
+    historyBtn.classList.add('active');
     renderDrawer('history');
+  } else {
+    favContent.style.display = 'block';
+    favBtn.classList.add('active');
+    renderDrawer(currentDrawerSubtab());
   }
 }
 
@@ -1841,14 +2336,18 @@ function currentDrawerSubtab() {
 }
 
 function currentDrawerTab() {
-  const mainActive = document.querySelector('.drawer-menu-item.active');
-  const mainTab = mainActive ? mainActive.dataset.tab : 'history';
-  return mainTab === 'favourites' ? currentDrawerSubtab() : 'history';
+  const historyOpen = document.getElementById('historySectionContent').style.display === 'block';
+  const favOpen = document.getElementById('favouritesSectionContent').style.display === 'block';
+  if (historyOpen) return 'history';
+  if (favOpen) return currentDrawerSubtab();
+  return 'history';
 }
 
 function renderDrawer(tab) {
   tab = tab || currentDrawerTab();
-  const body = document.getElementById('drawerBody');
+  const body = tab === 'history'
+    ? document.getElementById('historyListBody')
+    : document.getElementById('favouritesListBody');
 
   let items = [];
   if (tab === 'history') items = shelfData.history.slice().reverse();
@@ -1880,39 +2379,45 @@ function renderDrawer(tab) {
         </div>`;
     }
     if (tab === 'quotes') {
+      const qAttr = item.quote.replace(/'/g, "\\'");
+      const titleAttr = item.title.replace(/'/g, "\\'");
+      const authorAttr = item.author.replace(/'/g, "\\'");
       return `
-        <div class="drawer-item">
+        <div class="drawer-item clickable drawer-item-hoverable" onclick="viewFavoriteItem('quotes','${item.id}')">
           <div class="drawer-item-row">
             <div>
               <div class="drawer-item-text" style="margin-top:0">"${escapeHtml(item.quote)}"</div>
               <div class="drawer-item-author">${escapeHtml(item.title)} — ${escapeHtml(item.author)}</div>
             </div>
-            <span class="remove-x" onclick="removeFavorite('favQuotes','${item.id}')">&times;</span>
+            <div class="drawer-item-hover-actions">
+              <button class="save-img-btn drawer-hover-save" title="Save as image" onclick="event.stopPropagation(); saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Favorite')">${saveIconSvg}</button>
+              <span class="remove-x" onclick="event.stopPropagation(); removeFavorite('favQuotes','${item.id}')">&times;</span>
+            </div>
           </div>
         </div>`;
     }
     if (tab === 'books') {
       return `
-        <div class="drawer-item">
+        <div class="drawer-item clickable" onclick="viewFavoriteItem('books','${item.id}')">
           <div class="drawer-item-row">
             <div>
               <div class="drawer-item-title">${escapeHtml(item.title)}</div>
               <div class="drawer-item-author">${escapeHtml(item.author)}</div>
             </div>
-            <span class="remove-x" onclick="removeFavorite('favBooks','${item.id}')">&times;</span>
+            <span class="remove-x" onclick="event.stopPropagation(); removeFavorite('favBooks','${item.id}')">&times;</span>
           </div>
         </div>`;
     }
     if (tab === 'summaries') {
       return `
-        <div class="drawer-item">
+        <div class="drawer-item clickable" onclick="viewFavoriteItem('summaries','${item.id}')">
           <div class="drawer-item-row">
             <div>
               <div class="drawer-item-title">${escapeHtml(item.title)}</div>
               <div class="drawer-item-author">${escapeHtml(item.author)}</div>
               <div class="drawer-item-text">${escapeHtml((item.summary || '').slice(0, 120))}…</div>
             </div>
-            <span class="remove-x" onclick="removeFavorite('favSummaries','${item.id}')">&times;</span>
+            <span class="remove-x" onclick="event.stopPropagation(); removeFavorite('favSummaries','${item.id}')">&times;</span>
           </div>
         </div>`;
     }
@@ -2041,6 +2546,29 @@ function setMode(mode) {
   document.getElementById('summaryFields').style.display = mode === 'summary' ? 'block' : 'none';
 }
 
+let currentInputMethod = 'photo';
+
+function setInputMethod(method) {
+  currentInputMethod = method;
+  document.getElementById('methodPhoto').classList.toggle('active', method === 'photo');
+  document.getElementById('methodSearch').classList.toggle('active', method === 'search');
+  document.getElementById('scanZone').style.display = method === 'photo' ? 'block' : 'none';
+  document.getElementById('clearLink').style.display = (method === 'photo' && imageBase64) ? 'flex' : 'none';
+  document.getElementById('searchZone').style.display = method === 'search' ? 'block' : 'none';
+  document.getElementById('submitBtn').textContent = method === 'photo' ? 'Scan Book' : 'Find Book';
+  updateSubmitButtonState();
+}
+
+function updateSubmitButtonState() {
+  const submitBtn = document.getElementById('submitBtn');
+  if (currentInputMethod === 'photo') {
+    submitBtn.disabled = !imageBase64;
+  } else {
+    const title = document.getElementById('searchTitleInput').value.trim();
+    submitBtn.disabled = title.length === 0;
+  }
+}
+
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -2134,14 +2662,16 @@ function clearImage() {
   document.getElementById('submitBtn').disabled = true;
 }
 
+document.getElementById('searchTitleInput').addEventListener('input', updateSubmitButtonState);
+
 function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str ?? '';
   return d.innerHTML;
 }
 
-async function callClaude(userText, withImage = true) {
-  const systemPrompt = `You identify a book from its cover photo and, ONLY if it is confidently in the public domain (published before 1929, or an ancient/classical work, or otherwise clearly out of copyright worldwide), provide the requested content.
+async function callClaude(userText, withImage = true, customSystemPrompt = null) {
+  const defaultSystemPrompt = `You identify a book from its cover photo or from a typed title/author, and, ONLY if it is confidently in the public domain (published before 1929, or an ancient/classical work, or otherwise clearly out of copyright worldwide), provide the requested content.
 
 If the book is NOT public domain, or you cannot identify it confidently, respond with ONLY this JSON:
 {"status": "not_available", "reason": "short plain-English reason"}
@@ -2151,10 +2681,15 @@ If it IS public domain and identified, respond with ONLY this JSON (no markdown 
   "status": "ok",
   "title": "book title",
   "author": "author name",
+  "matched_note": null or a short string,
   "content_type": "quotes" or "summary",
   "quotes": ["real quote from the actual book text", ...] (only if content_type is quotes, 5-8 real quotes matching the requested mood, using the book's actual original words, never invented),
   "summary": "the summary text" (only if content_type is summary, matching requested length and style, based on the real content/themes of the actual book)
-}`;
+}
+
+For "matched_note": if the person's typed title or author was misspelled, missing an accent, incomplete, or otherwise not an exact match to the real title/author, set this to a short, friendly note like "Matched from your search — you typed \\"les miserables\\"." If what they typed already matches exactly (or this was a photo scan, not a search), set matched_note to null.`;
+
+  const systemPrompt = customSystemPrompt || defaultSystemPrompt;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -2221,12 +2756,12 @@ If it IS public domain and identified, respond with ONLY this JSON (no markdown 
   }
 }
 
-async function callClaudeWithRetries(userText, loadingEl, withImage = true) {
+async function callClaudeWithRetries(userText, loadingEl, withImage = true, customSystemPrompt = null) {
   let lastError;
   const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const result = await callClaude(userText, withImage);
+      const result = await callClaude(userText, withImage, customSystemPrompt);
       return result;
     } catch (err) {
       lastError = err;
@@ -2250,10 +2785,11 @@ function buildCardBodyHtml(result, stampLabel) {
   if (result.content_type === 'quotes' && result.quotes) {
     bodyHtml = result.quotes.map(q => {
       const qAttr = q.replace(/'/g, "\\'");
+      const isFav = shelfData.favQuotes.some(fq => fq.quote === q && fq.title === result.title);
       return `<div class="quote-item-row">
         <div class="quote-item">"${escapeHtml(q)}"</div>
         <div class="quote-actions">
-          <button class="fav-star" onclick="toggleQuoteFavorite(this,'${qAttr}','${titleAttr}','${authorAttr}')">&#9733;</button>
+          <button class="fav-star${isFav ? ' active' : ''}" onclick="toggleQuoteFavorite(this,'${qAttr}','${titleAttr}','${authorAttr}')">&#9733;</button>
           <button class="save-img-btn" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','${moodAttr}')">${saveIconSvg}</button>
         </div>
       </div>`;
@@ -2265,9 +2801,10 @@ function buildCardBodyHtml(result, stampLabel) {
     const sAttr = result.summary.replace(/'/g, "\\'").replace(/\n/g, ' ');
     const lengthAttr = (result.summaryLength || 'about one page').replace(/'/g, "\\'");
     const styleAttr = (result.summaryStyle || 'plain and clear').replace(/'/g, "\\'");
+    const isSummaryFav = shelfData.favSummaries.some(fs => fs.summary === result.summary && fs.title === result.title && fs.author === result.author);
     bodyHtml = `<div class="summary-text">${escapeHtml(result.summary)}</div>
       <div class="summary-actions">
-        <button class="fav-star" onclick="toggleSummaryFavorite(this,'${sAttr}','${titleAttr}','${authorAttr}')">&#9733; Save this summary</button>
+        <button class="fav-star${isSummaryFav ? ' active' : ''}" onclick="toggleSummaryFavorite(this,'${sAttr}','${titleAttr}','${authorAttr}')">&#9733; Save this summary</button>
         <button class="save-img-btn" title="Save as image" onclick="saveSummaryAsImage('${sAttr}','${titleAttr}','${authorAttr}')">${saveIconSvg}</button>
       </div>
       <div class="regen-row">
@@ -2302,6 +2839,10 @@ function renderResult(result, skipSave, targetId) {
   const authorAttr = result.author.replace(/'/g, "\\'");
 
   const bodyHtml = buildCardBodyHtml(result, stampLabel);
+  const isBookFav = shelfData.favBooks.some(fb => fb.title === result.title && fb.author === result.author);
+  const matchedNoteHtml = result.matched_note
+    ? `<div class="matched-note">${escapeHtml(result.matched_note)}</div>`
+    : '';
 
   card.innerHTML = `
     <div class="card-stamp">${escapeHtml(stampLabel)}</div>
@@ -2310,8 +2851,9 @@ function renderResult(result, skipSave, targetId) {
         <div>
           <div class="card-title">${titleEsc}</div>
           <div class="card-author">${authorEsc}</div>
+          ${matchedNoteHtml}
         </div>
-        <button class="fav-star" onclick="toggleBookFavorite(this,'${titleAttr}','${authorAttr}')">&#9733;</button>
+        <button class="fav-star${isBookFav ? ' active' : ''}" onclick="toggleBookFavorite(this,'${titleAttr}','${authorAttr}')">&#9733;</button>
       </div>
     </div>
     <div class="card-body-content">${bodyHtml}</div>
@@ -2340,25 +2882,39 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const errorBox = document.getElementById('errorBox');
   errorBox.innerHTML = '';
 
-  if (!imageBase64) return;
+  const usingPhoto = currentInputMethod === 'photo';
+
+  if (usingPhoto && !imageBase64) return;
+
+  let searchTitle = '';
+  let searchAuthor = '';
+  if (!usingPhoto) {
+    searchTitle = document.getElementById('searchTitleInput').value.trim();
+    searchAuthor = document.getElementById('searchAuthorInput').value.trim();
+    if (!searchTitle) return;
+  }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Reading...';
+  submitBtn.textContent = usingPhoto ? 'Reading...' : 'Searching...';
 
   const feed = document.getElementById('resultsFeed');
   const loadingEl = document.createElement('div');
   loadingEl.className = 'loading-box';
-  loadingEl.textContent = 'Consulting the catalogue...';
+  loadingEl.textContent = usingPhoto ? 'Consulting the catalogue...' : 'Looking that one up...';
   feed.prepend(loadingEl);
 
   try {
+    const bookIdentifier = usingPhoto
+      ? 'Identify this book.'
+      : `Find the book titled "${searchTitle}"${searchAuthor ? ` by ${searchAuthor}` : ''}.`;
+
     let userText;
     let summaryLengthUsed = null;
     let summaryStyleUsed = null;
     if (currentMode === 'quotes') {
       userText = currentMood === 'Surprise me'
-        ? `Identify this book. If public domain, give me content_type "quotes" with 5-8 real quotes from the book — pick a genuinely surprising, varied, and delightful mix rather than sticking to one mood. Choose whatever quotes you find most compelling or unexpected from the book.`
-        : `Identify this book. If public domain, give me content_type "quotes" with 5-8 real quotes from the book matching the mood: ${currentMood}.`;
+        ? `${bookIdentifier} If public domain, give me content_type "quotes" with 5-8 real quotes from the book — pick a genuinely surprising, varied, and delightful mix rather than sticking to one mood. Choose whatever quotes you find most compelling or unexpected from the book.`
+        : `${bookIdentifier} If public domain, give me content_type "quotes" with 5-8 real quotes from the book matching the mood: ${currentMood}.`;
     } else {
       const lengthSelect = document.getElementById('summaryLength').value;
       const length = lengthSelect === '__custom__'
@@ -2368,14 +2924,14 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       const style = styleSelect === '__custom__'
         ? (document.getElementById('customStyleInput').value.trim() || 'plain and clear')
         : styleSelect;
-      userText = `Identify this book. If public domain, give me content_type "summary" with length "${length}" and style "${style}".`;
+      userText = `${bookIdentifier} If public domain, give me content_type "summary" with length "${length}" and style "${style}".`;
       summaryLengthUsed = length;
       summaryStyleUsed = style;
     }
 
     let result;
     try {
-      result = await callClaudeWithRetries(userText, loadingEl, true);
+      result = await callClaudeWithRetries(userText, loadingEl, usingPhoto);
     } catch (err) {
       throw err;
     }
@@ -2388,10 +2944,13 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     renderResult(result);
   } catch (e) {
     loadingEl.remove();
-    errorBox.innerHTML = `<div class="error-box">Couldn't read that one after a few tries — this looks like a temporary AI service issue, not a problem with the book. Please try again in a moment. ${escapeHtml(e.message || String(e))}</div>`;
+    const notFoundMsg = usingPhoto
+      ? "Couldn't read that one after a few tries — this looks like a temporary AI service issue, not a problem with the book. Please try again in a moment."
+      : "Couldn't find that one after a few tries — double check the spelling, or this may be a temporary AI service issue. Please try again in a moment.";
+    errorBox.innerHTML = `<div class="error-box">${notFoundMsg} ${escapeHtml(e.message || String(e))}</div>`;
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Scan Book';
+    submitBtn.textContent = usingPhoto ? 'Scan Book' : 'Find Book';
   }
 });
 </script>
