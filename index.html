@@ -1066,6 +1066,16 @@
     color: var(--oxblood);
   }
 
+  .regen-btn-dark {
+    border: 1px solid rgba(184,144,90,0.5);
+    color: var(--brass-bright);
+  }
+  .regen-btn-dark:hover {
+    background: rgba(184,144,90,0.14);
+    border-color: var(--brass);
+    color: var(--brass-bright);
+  }
+
   footer.page-footer {
     text-align: center;
     font-size: 10px;
@@ -1883,7 +1893,7 @@ Give 5-8 quotes if you can confidently find that many; fewer is fine if you can'
         `;
       }).join('');
       resultsBox.innerHTML += `<div class="regen-row">
-        <button class="regen-btn" onclick="submitFindQuote(true)">${regenIconSvg} Show a different set</button>
+        <button class="regen-btn regen-btn-dark" onclick="submitFindQuote(true)">${regenIconSvg} Show a different set</button>
       </div>`;
     }
   } catch (e) {
@@ -1895,7 +1905,7 @@ Give 5-8 quotes if you can confidently find that many; fewer is fine if you can'
   }
 }
 
-async function loadRecommendations() {
+async function loadRecommendations(isReroll = false) {
   const recsBody = document.getElementById('recsBody');
 
   if (shelfData.history.length === 0) {
@@ -1903,7 +1913,7 @@ async function loadRecommendations() {
     return;
   }
 
-  recsBody.innerHTML = `<div class="loading-box">Thinking about what you might enjoy next...</div>`;
+  recsBody.innerHTML = `<div class="loading-box">${isReroll ? 'Thinking of some different ones...' : 'Thinking about what you might enjoy next...'}</div>`;
 
   const historySummary = shelfData.history.slice(-15).map(h =>
     `${h.title} by ${h.author} (${h.content_type === 'quotes' ? 'quotes: ' + h.mood : 'summary'})`
@@ -1919,7 +1929,11 @@ async function loadRecommendations() {
 }
 Give exactly 5 recommendations.`;
 
-  const userText = `Reading history: ${historySummary || 'none yet'}.
+  const userText = isReroll
+    ? `Reading history: ${historySummary || 'none yet'}.
+Favorited books: ${favBookSummary || 'none yet'}.
+Recommend 5 DIFFERENT public domain books than a typical first pass — vary the picks and reasoning, while staying just as relevant to their taste.`
+    : `Reading history: ${historySummary || 'none yet'}.
 Favorited books: ${favBookSummary || 'none yet'}.
 Recommend 5 public domain books this person would likely enjoy next.`;
 
@@ -1956,6 +1970,9 @@ Recommend 5 public domain books this person would likely enjoy next.`;
       </div>
     `;
     }).join('');
+    recsBody.innerHTML += `<div class="regen-row">
+      <button class="regen-btn regen-btn-dark" onclick="loadRecommendations(true)">${regenIconSvg} Different recommendations</button>
+    </div>`;
   } catch (e) {
     recsBody.innerHTML = `<div class="error-box">Couldn't put together recommendations right now. ${escapeHtml(e.message || String(e))}</div>`;
   }
