@@ -1522,12 +1522,19 @@
 <footer class="page-footer" id="pageFooter" style="display:none">THE BOOKPLATE · PUBLIC DOMAIN CATALOGUE</footer>
 
 <script>
-// Skip onboarding entirely for anyone who has already seen it before
-if (localStorage.getItem('bookplate-onboarded') === 'true') {
-  document.getElementById('onboarding').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-  document.getElementById('pageFooter').style.display = 'block';
-  document.getElementById('menuBtn').style.display = 'flex';
+// Skip onboarding entirely for anyone who has already seen it before.
+// Wrapped in try/catch: some browsers (e.g. Safari private browsing, or
+// storage blocked by privacy settings) can throw on localStorage access,
+// which would otherwise halt this whole script before anything else loads.
+try {
+  if (localStorage.getItem('bookplate-onboarded') === 'true') {
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('pageFooter').style.display = 'block';
+    document.getElementById('menuBtn').style.display = 'flex';
+  }
+} catch (e) {
+  // localStorage unavailable — fall through and show onboarding as normal
 }
 
 let previousPageBeforeSettings = 'main';
@@ -2789,7 +2796,11 @@ function prevOnboardingStep() {
 }
 
 function finishOnboarding() {
-  localStorage.setItem('bookplate-onboarded', 'true');
+  try {
+    localStorage.setItem('bookplate-onboarded', 'true');
+  } catch (e) {
+    // localStorage unavailable — onboarding just won't be remembered this time
+  }
   const onboarding = document.getElementById('onboarding');
   const mainApp = document.getElementById('mainApp');
   const pageFooter = document.getElementById('pageFooter');
