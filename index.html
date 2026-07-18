@@ -1543,6 +1543,8 @@
         <br><br>
         Book purchase links open Bookshop.org, which supports independent bookshops. As an affiliate, The Bookplate may earn a commission from qualifying purchases.
         <br><br>
+        Spotted a problem, or have an idea? We'd genuinely love to hear it: <a href="mailto:the.bookplate123@gmail.com" style="color:var(--brass-bright)">the.bookplate123@gmail.com</a>
+        <br><br>
         Version 1.0 &middot; Public Domain Edition
       </div>
     </div>
@@ -2012,27 +2014,40 @@ Give 5-8 quotes if you can confidently find that many; fewer is fine if you can'
     if (quotes.length === 0) {
       resultsBox.innerHTML = `<div class="drawer-empty">Couldn't confidently find quotes for that one — try a different theme or phrase it differently.</div>`;
     } else {
-      resultsBox.innerHTML = quotes.map(q => {
-        const qAttr = q.quote.replace(/'/g, "\\'");
-        const titleAttr = q.title.replace(/'/g, "\\'");
-        const authorAttr = q.author.replace(/'/g, "\\'");
+      resultsBox.innerHTML = quotes.map((q, i) => {
         const isFav = shelfData.favQuotes.some(fq => fq.quote === q.quote && fq.title === q.title);
         return `
-          <div class="card">
+          <div class="card" data-quote-idx="${i}">
             <div class="quote-item-row">
               <div class="quote-item">"${escapeHtml(q.quote)}"</div>
               <div class="quote-actions">
-                <button class="fav-star${isFav ? ' active' : ''}" onclick="toggleQuoteFavorite(this,'${qAttr}','${titleAttr}','${authorAttr}')">&#9733;</button>
-                <button class="save-img-btn" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Found for you')">${saveIconSvg}</button>
+                <button class="fav-star${isFav ? ' active' : ''}" data-action="fav">&#9733;</button>
+                <button class="save-img-btn" title="Save as image" data-action="save">${saveIconSvg}</button>
+                <button class="save-img-btn" title="Share" data-action="share">${shareIconSvg}</button>
               </div>
             </div>
-            <div class="card-footer">${escapeHtml(q.title)} — ${escapeHtml(q.author)} &middot; <span class="find-out-more-link" onclick="viewBookDetail('quote', {title:'${titleAttr}', author:'${authorAttr}', quote:'${qAttr}'})">Find out more</span></div>
+            <div class="card-footer">${escapeHtml(q.title)} — ${escapeHtml(q.author)} &middot; <span class="find-out-more-link" data-action="more">Find out more</span></div>
           </div>
         `;
       }).join('');
       resultsBox.innerHTML += `<div class="regen-row">
         <button class="regen-btn regen-btn-dark" onclick="submitFindQuote(true)">${regenIconSvg} Show a different set</button>
       </div>`;
+
+      // Attach handlers with raw quote data held in closures — nothing is
+      // interpolated into HTML attributes, so any characters in quotes are safe.
+      resultsBox.querySelectorAll('[data-quote-idx]').forEach(cardEl => {
+        const q = quotes[Number(cardEl.dataset.quoteIdx)];
+        if (!q) return;
+        const bind = (action, handler) => {
+          const el = cardEl.querySelector(`[data-action="${action}"]`);
+          if (el) el.addEventListener('click', function () { handler(this); });
+        };
+        bind('fav', (btn) => toggleQuoteFavorite(btn, q.quote, q.title, q.author));
+        bind('save', () => saveQuoteAsImage(q.quote, q.title, q.author, 'Found for you'));
+        bind('share', () => shareQuote(q.quote, q.title, q.author, 'Found for you'));
+        bind('more', () => viewBookDetail('quote', { title: q.title, author: q.author, quote: q.quote }));
+      });
     }
   } catch (e) {
     resultsBox.innerHTML = '';
@@ -2117,6 +2132,38 @@ Recommend 5 public domain books this person would likely enjoy next.`;
 }
 
 const saveIconSvg = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 14V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 4V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 11L12 15.5L16.5 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const shareIconSvg = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="5.5" r="2.6" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="18.5" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 10.8L15.2 6.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8.4 13.2L15.2 17.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+
+async function shareQuote(quoteText, title, author, mood) {
+  const canvas = await buildCardCanvas(quoteText, title, author, mood);
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    const file = new File([blob], `bookplate-quote-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          text: `"${quoteText}" — ${title}, ${author}`
+        });
+        return;
+      } catch (e) {
+        // user cancelled or share failed — fall through to download
+      }
+    }
+
+    // No native share available (e.g. desktop) — download the image instead
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }, 'image/jpeg', 0.92);
+}
 
 const regenIconSvg = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 11A8 8 0 1 0 18.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 5V11H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -2543,7 +2590,6 @@ function renderFavDetail(type, item) {
   const authorAttr = item.author.replace(/'/g, "\\'");
 
   if (type === 'quotes') {
-    const qAttr = item.quote.replace(/'/g, "\\'");
     body.innerHTML = `
       <div class="card">
         <div class="card-header" style="border-bottom:none;background-image:none;padding-bottom:6px;">
@@ -2553,10 +2599,15 @@ function renderFavDetail(type, item) {
         <div class="quote-item" style="font-size:19px">"${escapeHtml(item.quote)}"</div>
         <div class="summary-actions" style="margin-top:16px">
           <button class="fav-star active" onclick="unfavoriteAndBack('favQuotes','${item.id}')">&#9733; Remove favorite</button>
-          <button class="save-img-btn save-img-btn-lg" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Favorite')">${saveIconSvg}</button>
+          <button class="save-img-btn save-img-btn-lg" title="Save as image" data-action="save-fav-quote">${saveIconSvg}</button>
+          <button class="save-img-btn save-img-btn-lg" title="Share" data-action="share-fav-quote">${shareIconSvg}</button>
         </div>
       </div>
     `;
+    const saveBtn = body.querySelector('[data-action="save-fav-quote"]');
+    if (saveBtn) saveBtn.addEventListener('click', () => saveQuoteAsImage(item.quote, item.title, item.author, 'Favorite'));
+    const shareBtn = body.querySelector('[data-action="share-fav-quote"]');
+    if (shareBtn) shareBtn.addEventListener('click', () => shareQuote(item.quote, item.title, item.author, 'Favorite'));
   } else if (type === 'books') {
     body.innerHTML = `
       <div class="card">
