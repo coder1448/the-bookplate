@@ -1849,48 +1849,44 @@ function backFromBookDetail() {
 
 function renderBookDetail(type, data) {
   const body = document.getElementById('bookDetailBody');
-  const titleAttr = data.title.replace(/'/g, "\\'");
-  const authorAttr = data.author.replace(/'/g, "\\'");
   const buyLink = getBuyLink(data.title, data.author);
 
   let contentHtml = '';
   if (type === 'quote') {
-    const qAttr = (data.quote || '').replace(/'/g, "\\'");
     const isFav = shelfData.favQuotes.some(fq => fq.quote === data.quote && fq.title === data.title);
     contentHtml = `
       <div class="quote-item" style="font-size:19px">"${escapeHtml(data.quote || '')}"</div>
       <div class="quote-actions" style="margin-top:14px">
-        <button class="fav-star${isFav ? ' active' : ''}" onclick="toggleQuoteFavorite(this,'${qAttr}','${titleAttr}','${authorAttr}')">&#9733;</button>
-        <button class="save-img-btn" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Favorite')">${saveIconSvg}</button>
+        <button class="fav-star${isFav ? ' active' : ''}" data-action="fav-quote">&#9733;</button>
+        <button class="save-img-btn" title="Save as image" data-action="save-quote">${saveIconSvg}</button>
       </div>
       <div class="summary-actions" style="margin-top:12px">
-        <button class="regen-btn" onclick="rerollBookDetailQuote('${titleAttr}','${authorAttr}')">${regenIconSvg} Different quote</button>
+        <button class="regen-btn" data-action="reroll-quote">${regenIconSvg} Different quote</button>
       </div>
       <div style="margin-top:16px">
-        <button class="btn" style="width:100%" onclick="rescanFavoriteBook('${titleAttr}','${authorAttr}')">Get quotes or summary from this book</button>
+        <button class="btn" style="width:100%" data-action="explore-book">Get quotes or summary from this book</button>
       </div>
     `;
   } else if (type === 'summary') {
-    const sAttr = (data.summary || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
     const isFav = shelfData.favSummaries.some(fs => fs.summary === data.summary && fs.title === data.title);
     contentHtml = `
       <div class="summary-text">${escapeHtml(data.summary || '')}</div>
       <div class="summary-actions" style="margin-top:14px">
-        <button class="fav-star${isFav ? ' active' : ''}" onclick="toggleSummaryFavorite(this,'${sAttr}','${titleAttr}','${authorAttr}')">&#9733; Save this summary</button>
-        <button class="save-img-btn" title="Save as image" onclick="saveSummaryAsImage('${sAttr}','${titleAttr}','${authorAttr}')">${saveIconSvg}</button>
+        <button class="fav-star${isFav ? ' active' : ''}" data-action="fav-summary">&#9733; Save this summary</button>
+        <button class="save-img-btn" title="Save as image" data-action="save-summary">${saveIconSvg}</button>
       </div>
       <div class="summary-actions" style="margin-top:12px">
-        <button class="regen-btn" onclick="rerollBookDetailSummary('${titleAttr}','${authorAttr}')">${regenIconSvg} Redo summary</button>
+        <button class="regen-btn" data-action="reroll-summary">${regenIconSvg} Redo summary</button>
       </div>
       <div style="margin-top:16px">
-        <button class="btn" style="width:100%" onclick="rescanFavoriteBook('${titleAttr}','${authorAttr}')">Get quotes or summary from this book</button>
+        <button class="btn" style="width:100%" data-action="explore-book">Get quotes or summary from this book</button>
       </div>
     `;
   } else if (type === 'recommendation') {
     contentHtml = `
       <div class="summary-text">${escapeHtml(data.reason || '')}</div>
       <div class="summary-actions" style="margin-top:16px">
-        <button class="btn btn-primary" onclick="rescanFavoriteBook('${titleAttr}','${authorAttr}')">Get quotes or summary from this book</button>
+        <button class="btn btn-primary" data-action="explore-book">Get quotes or summary from this book</button>
       </div>
     `;
   }
@@ -1908,6 +1904,22 @@ function renderBookDetail(type, data) {
       </div>
     </div>
   `;
+
+  // Attach handlers with the raw data held in closures — no text is ever
+  // interpolated into HTML attributes, so quotes/backslashes/newlines in
+  // book content can't break the markup or the favorite matching.
+  const on = (action, handler) => {
+    const el = body.querySelector(`[data-action="${action}"]`);
+    if (el) el.addEventListener('click', function () { handler(this); });
+  };
+
+  on('fav-quote', (btn) => toggleQuoteFavorite(btn, data.quote, data.title, data.author));
+  on('save-quote', () => saveQuoteAsImage(data.quote, data.title, data.author, 'Favorite'));
+  on('reroll-quote', () => rerollBookDetailQuote(data.title, data.author));
+  on('fav-summary', (btn) => toggleSummaryFavorite(btn, data.summary, data.title, data.author));
+  on('save-summary', () => saveSummaryAsImage(data.summary, data.title, data.author));
+  on('reroll-summary', () => rerollBookDetailSummary(data.title, data.author));
+  on('explore-book', () => rescanFavoriteBook(data.title, data.author));
 }
 
 async function rerollBookDetailQuote(title, author) {
