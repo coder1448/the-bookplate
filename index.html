@@ -480,6 +480,53 @@
     letter-spacing: 0.04em;
   }
 
+  .find-out-more-link {
+    color: var(--oxblood);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .view-buy-btn {
+    margin-top: 12px;
+    width: 100%;
+    background: none;
+    border: 1px solid rgba(184,144,90,0.5);
+    color: var(--brass-bright);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 9px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .view-buy-btn:hover { background: rgba(184,144,90,0.12); }
+
+  .buy-book-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: var(--brass);
+    color: var(--oxblood-dark);
+    font-family: 'Jost', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    padding: 14px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    margin-top: 8px;
+  }
+  .buy-book-btn:hover { background: var(--brass-bright); }
+
+  .buy-book-note {
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    color: var(--parchment-dim);
+    text-align: center;
+    margin-top: 8px;
+  }
+
   .drawer-recs-btn {
     display: flex;
     align-items: center;
@@ -1405,6 +1452,14 @@
   <div id="findQuoteResults"></div>
 </div>
 
+<div class="wrap" id="bookDetailPage" style="display:none">
+  <header>
+    <span class="back-link" onclick="backFromBookDetail()">&larr; Back</span>
+    <div class="eyebrow" style="margin-top:14px">Book detail</div>
+  </header>
+  <div id="bookDetailBody"></div>
+</div>
+
 <div class="wrap" id="historyDetailPage" style="display:none">
   <header>
     <span class="back-link" onclick="backFromHistoryDetail()">&larr; Back</span>
@@ -1616,6 +1671,145 @@ function backFromFindQuote() {
   }, 400);
 }
 
+const bookDetailPageIdMap = { main: 'mainApp', recs: 'recsPage', findQuote: 'findQuotePage' };
+let previousPageBeforeBookDetail = 'main';
+
+function getBuyLink(title, author) {
+  // TODO: once the Bookshop.org affiliate application is approved, append the
+  // real affiliate tracking parameter here so purchases earn commission.
+  const query = encodeURIComponent(`${title} ${author}`);
+  return `https://uk.bookshop.org/search?keywords=${query}`;
+}
+
+function viewBookDetail(type, data) {
+  previousPageBeforeBookDetail = currentPage;
+  closeDrawer();
+
+  const sourceId = bookDetailPageIdMap[currentPage] || 'mainApp';
+  const sourceEl = document.getElementById(sourceId);
+  const menuBtn = document.getElementById('menuBtn');
+  const detailPage = document.getElementById('bookDetailPage');
+
+  sourceEl.classList.add('page-exit');
+  if (menuBtn) menuBtn.style.display = 'none';
+
+  setTimeout(() => {
+    sourceEl.style.display = 'none';
+    sourceEl.classList.remove('page-exit');
+
+    renderBookDetail(type, data);
+
+    detailPage.style.display = 'block';
+    detailPage.classList.remove('main-enter');
+    void detailPage.offsetWidth;
+    detailPage.classList.add('main-enter');
+    currentPage = 'bookDetail';
+  }, 400);
+}
+
+function backFromBookDetail() {
+  const detailPage = document.getElementById('bookDetailPage');
+  const menuBtn = document.getElementById('menuBtn');
+
+  detailPage.classList.add('page-exit');
+
+  setTimeout(() => {
+    detailPage.style.display = 'none';
+    detailPage.classList.remove('page-exit');
+
+    const targetId = bookDetailPageIdMap[previousPageBeforeBookDetail] || 'mainApp';
+    const targetEl = document.getElementById(targetId);
+    targetEl.style.display = 'block';
+    targetEl.classList.remove('main-enter');
+    void targetEl.offsetWidth;
+    targetEl.classList.add('main-enter');
+
+    if (menuBtn) menuBtn.style.display = 'flex';
+    currentPage = previousPageBeforeBookDetail;
+  }, 400);
+}
+
+function renderBookDetail(type, data) {
+  const body = document.getElementById('bookDetailBody');
+  const titleAttr = data.title.replace(/'/g, "\\'");
+  const authorAttr = data.author.replace(/'/g, "\\'");
+  const buyLink = getBuyLink(data.title, data.author);
+
+  let contentHtml = '';
+  if (type === 'quote') {
+    contentHtml = `
+      <div class="quote-item" style="font-size:19px">"${escapeHtml(data.quote || '')}"</div>
+      <div class="summary-actions" style="margin-top:16px">
+        <button class="regen-btn" onclick="rerollBookDetailQuote('${titleAttr}','${authorAttr}')">${regenIconSvg} Different quote</button>
+      </div>
+    `;
+  } else if (type === 'summary') {
+    contentHtml = `
+      <div class="summary-text">${escapeHtml(data.summary || '')}</div>
+      <div class="summary-actions" style="margin-top:16px">
+        <button class="regen-btn" onclick="rerollBookDetailSummary('${titleAttr}','${authorAttr}')">${regenIconSvg} Redo summary</button>
+      </div>
+    `;
+  } else if (type === 'recommendation') {
+    contentHtml = `
+      <div class="summary-text">${escapeHtml(data.reason || '')}</div>
+      <div class="summary-actions" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="rescanFavoriteBook('${titleAttr}','${authorAttr}')">Get quotes or summary from this book</button>
+      </div>
+    `;
+  }
+
+  body.innerHTML = `
+    <div class="card">
+      <div class="card-header" style="border-bottom:none;background-image:none;padding-bottom:6px;">
+        <div class="card-title">${escapeHtml(data.title)}</div>
+        <div class="card-author">${escapeHtml(data.author)}</div>
+      </div>
+      ${contentHtml}
+      <div style="margin-top:20px; padding-top:16px; border-top:1px dashed rgba(42,31,26,0.2);">
+        <a class="buy-book-btn" href="${buyLink}" target="_blank" rel="noopener">Buy this book</a>
+        <div class="buy-book-note">Opens Bookshop.org — supports independent bookshops</div>
+      </div>
+    </div>
+  `;
+}
+
+async function rerollBookDetailQuote(title, author) {
+  const quoteEl = document.querySelector('#bookDetailBody .quote-item');
+  if (quoteEl) quoteEl.textContent = 'Finding another quote...';
+
+  const userText = `Find the book titled "${title}" by ${author}. Give me content_type "quotes" with 1 real, notable quote from the book — pick a genuinely different one than an obvious first pick.`;
+
+  try {
+    const result = await callClaudeWithRetries(userText, null, false);
+    if (result && result.status === 'ok' && result.quotes && result.quotes[0]) {
+      renderBookDetail('quote', { title, author, quote: result.quotes[0] });
+    } else if (quoteEl) {
+      quoteEl.textContent = "Couldn't find another quote just now — please try again.";
+    }
+  } catch (e) {
+    if (quoteEl) quoteEl.textContent = "Couldn't find another quote just now — please try again.";
+  }
+}
+
+async function rerollBookDetailSummary(title, author) {
+  const summaryEl = document.querySelector('#bookDetailBody .summary-text');
+  if (summaryEl) summaryEl.textContent = 'Writing a fresh summary...';
+
+  const userText = `Find the book titled "${title}" by ${author}. Give me content_type "summary" with length "about one page" and style "plain and clear". Phrase it freshly, somewhat differently from a typical first attempt.`;
+
+  try {
+    const result = await callClaudeWithRetries(userText, null, false);
+    if (result && result.status === 'ok' && result.summary) {
+      renderBookDetail('summary', { title, author, summary: result.summary });
+    } else if (summaryEl) {
+      summaryEl.textContent = "Couldn't write a new summary just now — please try again.";
+    }
+  } catch (e) {
+    if (summaryEl) summaryEl.textContent = "Couldn't write a new summary just now — please try again.";
+  }
+}
+
 function goToFindQuote() {
   currentPage = 'findQuote';
   closeDrawer();
@@ -1684,7 +1878,7 @@ Give 5-8 quotes if you can confidently find that many; fewer is fine if you can'
                 <button class="save-img-btn" title="Save as image" onclick="saveQuoteAsImage('${qAttr}','${titleAttr}','${authorAttr}','Found for you')">${saveIconSvg}</button>
               </div>
             </div>
-            <div class="card-footer">${escapeHtml(q.title)} — ${escapeHtml(q.author)}</div>
+            <div class="card-footer">${escapeHtml(q.title)} — ${escapeHtml(q.author)} &middot; <span class="find-out-more-link" onclick="viewBookDetail('quote', {title:'${titleAttr}', author:'${authorAttr}', quote:'${qAttr}'})">Find out more</span></div>
           </div>
         `;
       }).join('');
@@ -1749,13 +1943,19 @@ Recommend 5 public domain books this person would likely enjoy next.`;
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
 
-    recsBody.innerHTML = parsed.recommendations.map(r => `
+    recsBody.innerHTML = parsed.recommendations.map(r => {
+      const titleAttr = r.title.replace(/'/g, "\\'");
+      const authorAttr = r.author.replace(/'/g, "\\'");
+      const reasonAttr = r.reason.replace(/'/g, "\\'");
+      return `
       <div class="rec-card">
         <div class="rec-card-title">${escapeHtml(r.title)}</div>
         <div class="rec-card-author">${escapeHtml(r.author)}</div>
         <div class="rec-card-reason">${escapeHtml(r.reason)}</div>
+        <button class="btn view-buy-btn" onclick="viewBookDetail('recommendation', {title:'${titleAttr}', author:'${authorAttr}', reason:'${reasonAttr}'})">View &amp; Buy</button>
       </div>
-    `).join('');
+    `;
+    }).join('');
   } catch (e) {
     recsBody.innerHTML = `<div class="error-box">Couldn't put together recommendations right now. ${escapeHtml(e.message || String(e))}</div>`;
   }
@@ -2110,7 +2310,8 @@ function viewHistoryItem(id) {
       content_type: item.content_type,
       mood: item.mood,
       quotes: item.quotes,
-      summary: item.summary
+      summary: item.summary,
+      fromPhoto: item.fromPhoto !== false
     }, true, 'historyDetailBody');
 
     const detailPage = document.getElementById('historyDetailPage');
@@ -2889,6 +3090,9 @@ function renderResult(result, skipSave, targetId) {
   const matchedNoteHtml = result.matched_note
     ? `<div class="matched-note">${escapeHtml(result.matched_note)}</div>`
     : '';
+  const findOutMoreHtml = result.fromPhoto === false
+    ? ` &middot; <span class="find-out-more-link" onclick="viewBookDetail('${result.content_type === 'quotes' ? 'quote' : 'summary'}', {title:'${titleAttr}', author:'${authorAttr}'${result.content_type === 'quotes' && result.quotes && result.quotes[0] ? ", quote:'" + result.quotes[0].replace(/'/g, "\\'") + "'" : ''}${result.summary ? ", summary:'" + result.summary.replace(/'/g, "\\'").replace(/\n/g, ' ') + "'" : ''}})">Find out more</span>`
+    : '';
 
   card.innerHTML = `
     <div class="card-stamp">${escapeHtml(stampLabel)}</div>
@@ -2903,7 +3107,7 @@ function renderResult(result, skipSave, targetId) {
       </div>
     </div>
     <div class="card-body-content">${bodyHtml}</div>
-    <div class="card-footer">Public domain · The Bookplate catalogue</div>
+    <div class="card-footer">Public domain · The Bookplate catalogue${findOutMoreHtml}</div>
   `;
   feed.prepend(card);
 
@@ -2917,7 +3121,8 @@ function renderResult(result, skipSave, targetId) {
     content_type: result.content_type,
     mood: currentMood,
     quotes: result.quotes || null,
-    summary: result.summary || null
+    summary: result.summary || null,
+    fromPhoto: result.fromPhoto !== false
   });
   saveShelf();
   return card;
@@ -2986,6 +3191,9 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     if (result && result.status === 'ok' && summaryLengthUsed) {
       result.summaryLength = summaryLengthUsed;
       result.summaryStyle = summaryStyleUsed;
+    }
+    if (result && result.status === 'ok') {
+      result.fromPhoto = usingPhoto;
     }
     renderResult(result);
   } catch (e) {
