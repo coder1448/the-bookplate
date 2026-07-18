@@ -1503,6 +1503,23 @@
   </div>
 
   <div class="settings-row">
+    <div class="settings-row-text" style="width:100%">
+      <div class="settings-row-title">Default quote mood</div>
+      <div class="settings-row-desc">Pre-selected when you open the scanner. Type anything — e.g. "Motivational", "Stoic wisdom", "Funny". Leave blank for the standard default.</div>
+      <input type="text" id="defaultMoodInput" class="search-text-input" style="margin-top:10px; margin-bottom:0" placeholder="e.g. Motivational" onchange="saveDefaultSettings()">
+    </div>
+  </div>
+
+  <div class="settings-row">
+    <div class="settings-row-text" style="width:100%">
+      <div class="settings-row-title">Default summary length &amp; style</div>
+      <div class="settings-row-desc">Pre-selected for summaries. Leave blank for the standard defaults.</div>
+      <input type="text" id="defaultLengthInput" class="search-text-input" style="margin-top:10px; margin-bottom:8px" placeholder="Length — e.g. about one page" onchange="saveDefaultSettings()">
+      <input type="text" id="defaultStyleInput" class="search-text-input" style="margin-bottom:0" placeholder="Style — e.g. plain and clear" onchange="saveDefaultSettings()">
+    </div>
+  </div>
+
+  <div class="settings-row">
     <div class="settings-row-text">
       <div class="settings-row-title">Clear all history</div>
       <div class="settings-row-desc">Deletes every past scan from your history. Your favorites won't be affected.</div>
@@ -1516,6 +1533,19 @@
       <div class="settings-row-desc">Deletes your entire history and all favorited books, quotes, and summaries.</div>
     </div>
     <button class="settings-clear-btn" onclick="clearAllData()">Clear</button>
+  </div>
+
+  <div class="settings-row">
+    <div class="settings-row-text">
+      <div class="settings-row-title">About The Bookplate</div>
+      <div class="settings-row-desc">
+        The Bookplate turns any classic book into instant quotes and summaries — scan a cover, search a title, or find a quote by theme. This edition covers public domain classics.
+        <br><br>
+        Book purchase links open Bookshop.org, which supports independent bookshops. As an affiliate, The Bookplate may earn a commission from qualifying purchases.
+        <br><br>
+        Version 1.0 &middot; Public Domain Edition
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1556,6 +1586,10 @@ function goToSettings() {
     sourceEl.classList.remove('page-exit');
 
     document.getElementById('onThisDayToggle').checked = !!(shelfData.onThisDay && shelfData.onThisDay.enabled);
+    const defaults = shelfData.defaults || {};
+    document.getElementById('defaultMoodInput').value = defaults.mood || '';
+    document.getElementById('defaultLengthInput').value = defaults.summaryLength || '';
+    document.getElementById('defaultStyleInput').value = defaults.summaryStyle || '';
 
     settingsPage.style.display = 'block';
     settingsPage.classList.remove('main-enter');
@@ -1593,6 +1627,65 @@ function toggleOnThisDaySetting(checked) {
   shelfData.onThisDay.asked = true;
   saveShelf();
   renderOnThisDayBanner();
+}
+
+function saveDefaultSettings() {
+  if (!shelfData.defaults) shelfData.defaults = {};
+  shelfData.defaults.mood = document.getElementById('defaultMoodInput').value.trim();
+  shelfData.defaults.summaryLength = document.getElementById('defaultLengthInput').value.trim();
+  shelfData.defaults.summaryStyle = document.getElementById('defaultStyleInput').value.trim();
+  saveShelf();
+  applyDefaultSettings();
+}
+
+function applyDefaultSettings() {
+  const defaults = shelfData.defaults || {};
+
+  // Default mood: if it matches a preset chip, select that chip; otherwise use the Custom chip with the text filled in
+  if (defaults.mood) {
+    const presetChips = Array.from(document.querySelectorAll('.chip')).filter(c => c.dataset.mood && c.dataset.mood !== '__custom__' && c.dataset.mood !== '__surprise__');
+    const match = presetChips.find(c => c.dataset.mood.toLowerCase() === defaults.mood.toLowerCase());
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    const customInput = document.getElementById('customMoodInput');
+    if (match) {
+      match.classList.add('active');
+      currentMood = match.dataset.mood;
+      if (customInput) customInput.style.display = 'none';
+    } else {
+      const customChip = document.getElementById('customChip');
+      if (customChip) {
+        customChip.classList.add('active');
+        if (customInput) {
+          customInput.style.display = 'block';
+          customInput.value = defaults.mood;
+        }
+        currentMood = defaults.mood;
+      }
+    }
+  }
+
+  // Default summary length/style: if it matches a dropdown option, select it; otherwise use the custom option with text filled in
+  applyDefaultToSelect('summaryLength', 'customLengthInput', defaults.summaryLength);
+  applyDefaultToSelect('summaryStyle', 'customStyleInput', defaults.summaryStyle);
+}
+
+function applyDefaultToSelect(selectId, customInputId, value) {
+  if (!value) return;
+  const select = document.getElementById(selectId);
+  const customInput = document.getElementById(customInputId);
+  if (!select) return;
+
+  const match = Array.from(select.options).find(o => o.value.toLowerCase() === value.toLowerCase() && o.value !== '__custom__');
+  if (match) {
+    select.value = match.value;
+    if (customInput) customInput.style.display = 'none';
+  } else {
+    select.value = '__custom__';
+    if (customInput) {
+      customInput.style.display = 'block';
+      customInput.value = value;
+    }
+  }
 }
 
 let confirmModalCallback = null;
@@ -1756,30 +1849,44 @@ function backFromBookDetail() {
 
 function renderBookDetail(type, data) {
   const body = document.getElementById('bookDetailBody');
-  const titleAttr = data.title.replace(/'/g, "\\'");
-  const authorAttr = data.author.replace(/'/g, "\\'");
   const buyLink = getBuyLink(data.title, data.author);
 
   let contentHtml = '';
   if (type === 'quote') {
+    const isFav = shelfData.favQuotes.some(fq => fq.quote === data.quote && fq.title === data.title);
     contentHtml = `
       <div class="quote-item" style="font-size:19px">"${escapeHtml(data.quote || '')}"</div>
-      <div class="summary-actions" style="margin-top:16px">
-        <button class="regen-btn" onclick="rerollBookDetailQuote('${titleAttr}','${authorAttr}')">${regenIconSvg} Different quote</button>
+      <div class="quote-actions" style="margin-top:14px">
+        <button class="fav-star${isFav ? ' active' : ''}" data-action="fav-quote">&#9733;</button>
+        <button class="save-img-btn" title="Save as image" data-action="save-quote">${saveIconSvg}</button>
+      </div>
+      <div class="summary-actions" style="margin-top:12px">
+        <button class="regen-btn" data-action="reroll-quote">${regenIconSvg} Different quote</button>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn" style="width:100%" data-action="explore-book">Get quotes or summary from this book</button>
       </div>
     `;
   } else if (type === 'summary') {
+    const isFav = shelfData.favSummaries.some(fs => fs.summary === data.summary && fs.title === data.title);
     contentHtml = `
       <div class="summary-text">${escapeHtml(data.summary || '')}</div>
-      <div class="summary-actions" style="margin-top:16px">
-        <button class="regen-btn" onclick="rerollBookDetailSummary('${titleAttr}','${authorAttr}')">${regenIconSvg} Redo summary</button>
+      <div class="summary-actions" style="margin-top:14px">
+        <button class="fav-star${isFav ? ' active' : ''}" data-action="fav-summary">&#9733; Save this summary</button>
+        <button class="save-img-btn" title="Save as image" data-action="save-summary">${saveIconSvg}</button>
+      </div>
+      <div class="summary-actions" style="margin-top:12px">
+        <button class="regen-btn" data-action="reroll-summary">${regenIconSvg} Redo summary</button>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn" style="width:100%" data-action="explore-book">Get quotes or summary from this book</button>
       </div>
     `;
   } else if (type === 'recommendation') {
     contentHtml = `
       <div class="summary-text">${escapeHtml(data.reason || '')}</div>
       <div class="summary-actions" style="margin-top:16px">
-        <button class="btn btn-primary" onclick="rescanFavoriteBook('${titleAttr}','${authorAttr}')">Get quotes or summary from this book</button>
+        <button class="btn btn-primary" data-action="explore-book">Get quotes or summary from this book</button>
       </div>
     `;
   }
@@ -1797,6 +1904,22 @@ function renderBookDetail(type, data) {
       </div>
     </div>
   `;
+
+  // Attach handlers with the raw data held in closures — no text is ever
+  // interpolated into HTML attributes, so quotes/backslashes/newlines in
+  // book content can't break the markup or the favorite matching.
+  const on = (action, handler) => {
+    const el = body.querySelector(`[data-action="${action}"]`);
+    if (el) el.addEventListener('click', function () { handler(this); });
+  };
+
+  on('fav-quote', (btn) => toggleQuoteFavorite(btn, data.quote, data.title, data.author));
+  on('save-quote', () => saveQuoteAsImage(data.quote, data.title, data.author, 'Favorite'));
+  on('reroll-quote', () => rerollBookDetailQuote(data.title, data.author));
+  on('fav-summary', (btn) => toggleSummaryFavorite(btn, data.summary, data.title, data.author));
+  on('save-summary', () => saveSummaryAsImage(data.summary, data.title, data.author));
+  on('reroll-summary', () => rerollBookDetailSummary(data.title, data.author));
+  on('explore-book', () => rescanFavoriteBook(data.title, data.author));
 }
 
 async function rerollBookDetailQuote(title, author) {
@@ -2283,6 +2406,7 @@ async function loadShelf() {
       shelfData = JSON.parse(result.value);
       if (!shelfData.onThisDay) shelfData.onThisDay = { asked: false, enabled: false };
       renderOnThisDayBanner();
+      applyDefaultSettings();
       return;
     }
   } catch (e) {
@@ -2296,6 +2420,7 @@ async function loadShelf() {
   }
   if (!shelfData.onThisDay) shelfData.onThisDay = { asked: false, enabled: false };
   renderOnThisDayBanner();
+  applyDefaultSettings();
 }
 
 async function saveShelf() {
@@ -2464,8 +2589,11 @@ function renderFavDetail(type, item) {
   }
 }
 
+const rescanSourcePageIdMap = { favDetail: 'favDetailPage', bookDetail: 'bookDetailPage' };
+
 function rescanFavoriteBook(title, author) {
-  const detailPage = document.getElementById('favDetailPage');
+  const detailPageId = rescanSourcePageIdMap[currentPage] || 'favDetailPage';
+  const detailPage = document.getElementById(detailPageId);
   const mainApp = document.getElementById('mainApp');
   const recsPage = document.getElementById('recsPage');
   const menuBtn = document.getElementById('menuBtn');
