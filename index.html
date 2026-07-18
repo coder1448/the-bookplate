@@ -1522,6 +1522,14 @@
 <footer class="page-footer" id="pageFooter" style="display:none">THE BOOKPLATE · PUBLIC DOMAIN CATALOGUE</footer>
 
 <script>
+// Skip onboarding entirely for anyone who has already seen it before
+if (localStorage.getItem('bookplate-onboarded') === 'true') {
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('pageFooter').style.display = 'block';
+  document.getElementById('menuBtn').style.display = 'flex';
+}
+
 let previousPageBeforeSettings = 'main';
 
 function goToSettings() {
@@ -1966,7 +1974,7 @@ Recommend 5 public domain books this person would likely enjoy next.`;
         <div class="rec-card-title">${escapeHtml(r.title)}</div>
         <div class="rec-card-author">${escapeHtml(r.author)}</div>
         <div class="rec-card-reason">${escapeHtml(r.reason)}</div>
-        <button class="btn view-buy-btn" onclick="viewBookDetail('recommendation', {title:'${titleAttr}', author:'${authorAttr}', reason:'${reasonAttr}'})">View &amp; Buy</button>
+        <button class="btn view-buy-btn" onclick="viewBookDetail('recommendation', {title:'${titleAttr}', author:'${authorAttr}', reason:'${reasonAttr}'})">Find out more</button>
       </div>
     `;
     }).join('');
@@ -2781,6 +2789,7 @@ function prevOnboardingStep() {
 }
 
 function finishOnboarding() {
+  localStorage.setItem('bookplate-onboarded', 'true');
   const onboarding = document.getElementById('onboarding');
   const mainApp = document.getElementById('mainApp');
   const pageFooter = document.getElementById('pageFooter');
