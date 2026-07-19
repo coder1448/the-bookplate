@@ -208,9 +208,17 @@
     border-radius: 16px;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.15s;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    min-width: 52px;
+    text-align: center;
   }
   .settings-clear-btn:hover { background: rgba(168,90,74,0.15); }
+  .settings-clear-btn.cleared {
+    border-color: #6a9a7a;
+    color: #9fd4b0;
+    background: rgba(106,154,122,0.15);
+    cursor: default;
+  }
 
   .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
 
@@ -965,24 +973,39 @@
 
   .drawer-hover-save {
     color: var(--parchment-dim);
-    opacity: 0;
     transition: opacity 0.15s, color 0.15s;
   }
-  .drawer-item-hoverable:hover .drawer-hover-save {
-    opacity: 1;
+
+  /* Only fade the save icon in/out on devices with a real mouse (hover
+     capability). On touch devices, any element with a :hover rule attached
+     requires a first tap just to "simulate" hovering before a second tap
+     actually registers as a click — so on touch, skip the hover-hide
+     entirely and just show the icon plainly, keeping everything one tap. */
+  @media (hover: hover) and (pointer: fine) {
+    .drawer-hover-save {
+      opacity: 0;
+    }
+    .drawer-item-hoverable:hover .drawer-hover-save {
+      opacity: 1;
+    }
+    .drawer-hover-save:hover { color: var(--brass-bright); }
   }
-  .drawer-hover-save:hover { color: var(--brass-bright); }
 
   .history-remove-x {
     position: absolute;
     top: 8px;
     right: 10px;
-    opacity: 0;
     transition: opacity 0.15s, color 0.15s;
     z-index: 2;
   }
-  .drawer-item-hoverable:hover .history-remove-x {
-    opacity: 1;
+
+  @media (hover: hover) and (pointer: fine) {
+    .history-remove-x {
+      opacity: 0;
+    }
+    .drawer-item-hoverable:hover .history-remove-x {
+      opacity: 1;
+    }
   }
 
   /* Favorite star buttons */
@@ -1528,7 +1551,7 @@
       <div class="settings-row-title">Clear all history</div>
       <div class="settings-row-desc">Deletes every past scan from your history. Your favorites won't be affected.</div>
     </div>
-    <button class="settings-clear-btn" onclick="clearAllHistory()">Clear</button>
+    <button class="settings-clear-btn" onclick="clearAllHistory(this)">Clear</button>
   </div>
 
   <div class="settings-row">
@@ -1536,7 +1559,7 @@
       <div class="settings-row-title">Clear all data</div>
       <div class="settings-row-desc">Deletes your entire history and all favorited books, quotes, and summaries.</div>
     </div>
-    <button class="settings-clear-btn" onclick="clearAllData()">Clear</button>
+    <button class="settings-clear-btn" onclick="clearAllData(this)">Clear</button>
   </div>
 
   <div class="settings-row">
@@ -1715,7 +1738,7 @@ document.getElementById('confirmModalActionBtn').addEventListener('click', () =>
   closeConfirmModal();
 });
 
-function clearAllHistory() {
+function clearAllHistory(btn) {
   showConfirmModal(
     'Clear all history?',
     "This will permanently delete every past scan from your history. Your favorites won't be affected. This can't be undone.",
@@ -1723,11 +1746,12 @@ function clearAllHistory() {
       shelfData.history = [];
       saveShelf();
       renderOnThisDayBanner();
+      showClearedCheckmark(btn);
     }
   );
 }
 
-function clearAllData() {
+function clearAllData(btn) {
   showConfirmModal(
     'Clear all data?',
     "This will permanently delete your entire history and all favorited books, quotes, and summaries. This can't be undone.",
@@ -1738,8 +1762,22 @@ function clearAllData() {
       shelfData.favSummaries = [];
       saveShelf();
       renderOnThisDayBanner();
+      showClearedCheckmark(btn);
     }
   );
+}
+
+function showClearedCheckmark(btn) {
+  if (!btn) return;
+  const original = btn.textContent;
+  btn.textContent = '✓';
+  btn.disabled = true;
+  btn.classList.add('cleared');
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+    btn.classList.remove('cleared');
+  }, 1600);
 }
 
 function backToMain() {
