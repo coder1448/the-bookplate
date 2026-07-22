@@ -58,6 +58,16 @@
 
   .onboarding-step {
     animation: fadeIn 0.35s ease;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  @media (max-width: 420px) {
+    .onboarding-step {
+      min-height: 300px;
+    }
   }
 
   @keyframes fadeIn {
